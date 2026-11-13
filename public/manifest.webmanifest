@@ -1,0 +1,17 @@
+{
+  "name": "The Resort Operations",
+  "short_name": "The Resort",
+  "description": "Resort operations workspace for Tatlisu.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#e8e9e7",
+  "theme_color": "#e8e9e7",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

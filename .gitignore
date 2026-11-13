@@ -1,0 +1,23 @@
+# Dependencies and build output
+node_modules/
+.next/
+out/
+coverage/
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Local environment and credentials
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*service-account*.json
+*firebase-adminsdk-*.json
+serviceAccountKey.json
+
+# Local tools
+.DS_Store
+.vercel/
+.supabase/
