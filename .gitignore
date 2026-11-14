@@ -21,3 +21,5 @@ serviceAccountKey.json
 .DS_Store
 .vercel/
 .supabase/
+.vercel
+.env*
