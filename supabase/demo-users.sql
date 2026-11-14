@@ -1,27 +1,57 @@
--- Run only in the development project's SQL editor after creating these five
--- synthetic accounts in Supabase Auth. Do not use real staff or guest accounts.
-do $$
-declare
-  missing_emails text[];
-begin
-  select array_agg(expected.email)
-    into missing_emails
-    from (values
-      ('guest.demo@example.test'),
-      ('resident.demo@example.test'),
-      ('worker.demo@example.test'),
-      ('manager.demo@example.test'),
-      ('admin.demo@example.test')
-    ) as expected(email)
-    left join auth.users u on lower(u.email) = expected.email
-    where u.id is null;
+-- ============================================================================
+-- The Resort Platform: In-House Postgres User Provisioning & Demo Fixtures
+-- Run this directly in the Supabase SQL Editor.
+-- Safe to re-run anytime: updates passwords, auto-confirms emails, seeds fixtures.
+-- ============================================================================
 
-  if missing_emails is not null then
-    raise exception 'Create these development test accounts first: %', missing_emails;
-  end if;
-end
-$$;
+create extension if not exists pgcrypto;
 
+-- 1. Provision all in-house user credentials directly in Postgres auth.users
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  encrypted_password,
+  email_confirmed_at,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+   'admin.demo@example.test', extensions.crypt('DemoAdmin123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Admin Demo"}', now(), now()),
+
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+   'manager.demo@example.test', extensions.crypt('DemoManager123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Management Demo"}', now(), now()),
+
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+   'worker.demo@example.test', extensions.crypt('DemoWorker123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Worker Demo"}', now(), now()),
+
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+   'resident.demo@example.test', extensions.crypt('DemoResident123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Resident Demo"}', now(), now()),
+
+  ('00000000-0000-0000-0000-000000000000', gen_random_uuid(), 'authenticated', 'authenticated',
+   'guest.demo@example.test', extensions.crypt('DemoGuest123!', extensions.gen_salt('bf')),
+   now(), '{"provider":"email","providers":["email"]}', '{"full_name":"Guest Demo"}', now(), now())
+on conflict (email) do update
+set encrypted_password = excluded.encrypted_password,
+    email_confirmed_at = now(),
+    updated_at = now();
+
+-- 2. Ensure profile records exist for all in-house accounts
+insert into public.profiles (id, full_name, role)
+select au.id, coalesce(au.raw_user_meta_data->>'full_name', ''), 'guest'::public.user_role
+from auth.users au
+where not exists (select 1 from public.profiles p where p.id = au.id)
+on conflict (id) do nothing;
+
+-- 3. Assign in-house operational roles & unit assignments
 update public.profiles p
 set role = assignments.role,
     full_name = assignments.full_name,
@@ -41,9 +71,7 @@ join (values
 ) as assignments(email, full_name, role) on lower(au.email) = assignments.email
 where p.id = au.id;
 
--- Synthetic live-demo fixtures. Safe to re-run in the development project.
--- These rows represent existing operational records, so bypass only the insert
--- guard while seeding as the database owner; normal client writes remain guarded.
+-- 4. Synthetic operational tickets
 alter table public.tickets disable trigger user;
 insert into public.tickets
   (title, description, location, unit_id, facility_id, priority, status, created_by, assigned_to)
@@ -66,6 +94,7 @@ where not exists (
 );
 alter table public.tickets enable trigger user;
 
+-- 5. Active stay for guest
 insert into public.stays (unit_id, guest_id, check_in, check_out, source)
 select u.id, au.id, current_date, current_date + 3, 'demo'
 from public.units u
@@ -73,6 +102,7 @@ join auth.users au on lower(au.email) = 'guest.demo@example.test'
 where u.code = 'DEMO-A-204'
   and not exists (select 1 from public.stays s where s.guest_id = au.id and s.unit_id = u.id);
 
+-- 6. Reservations
 insert into public.reservations (amenity_id, party_id, starts_at, party_size, status)
 select a.id, au.id, now() + fixture.hours * interval '1 hour', fixture.party_size,
        'confirmed'::public.reservation_status
@@ -88,6 +118,7 @@ where not exists (
   where r.amenity_id = a.id and r.party_id = au.id and r.status = 'confirmed'
 );
 
+-- 7. In-app notifications
 insert into public.notifications (user_id, body, read)
 select au.id, fixture.body, fixture.read
 from (values
