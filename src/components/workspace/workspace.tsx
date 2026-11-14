@@ -27,6 +27,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
+import { LanguageSwitcher } from "@/components/language-switcher";
 import { demoTickets } from "@/lib/demo-data";
 import type {
   Amenity,
@@ -375,6 +376,7 @@ function WorkspaceShell({
         <header className="topbar">
           <div className="breadcrumb">The Resort <span aria-hidden="true">/</span> <strong>{viewTitles[currentView]}</strong></div>
           <div className="top-actions">
+            <LanguageSwitcher compact />
             {mode === "preview" ? (
               <span className="role-pill">Preview · {roleTitles[role]}</span>
             ) : (

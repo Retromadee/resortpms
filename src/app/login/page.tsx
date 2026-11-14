@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { signIn, signUp, quickDemoSignIn } from "@/app/login/actions";
 import { isSupabaseConfigured } from "@/lib/supabase/server";
+import { LanguageSwitcher } from "@/components/language-switcher";
 
 type LoginPageProps = {
   searchParams: Promise<{ error?: string; mode?: string; success?: string }>;
@@ -67,9 +68,12 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
   return (
     <main className="login-page">
       <div className="login-card" style={{ width: "min(100%, 460px)" }}>
-        <div className="login-brand">
-          <span className="brand-mark"><Waves size={22} aria-hidden="true" /></span>
-          <span>The Resort <small>TATLISU · NORTH CYPRUS</small></span>
+        <div style={{ display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 24 }}>
+          <div className="login-brand" style={{ marginBottom: 0 }}>
+            <span className="brand-mark"><Waves size={22} aria-hidden="true" /></span>
+            <span>The Resort <small>TATLISU · NORTH CYPRUS</small></span>
+          </div>
+          <LanguageSwitcher />
         </div>
         <p className="eyebrow">{isSignup ? "WELCOME TO THE RESORT" : "OPERATIONS ACCESS"}</p>
         <h1>{isSignup ? "Create your guest account" : "Sign in to your workspace"}</h1>
