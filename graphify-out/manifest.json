@@ -25,8 +25,8 @@
     "semantic_hash": ""
   },
   "package.json": {
-    "mtime": 1794593452.738661,
-    "ast_hash": "a1158cf22d71a0c70f6cc907479df2d7",
+    "mtime": 1794833751.696998,
+    "ast_hash": "9da4c624c469c24a19218d29eec73de3",
     "semantic_hash": ""
   },
   "scripts/install-skills.ps1": {
@@ -60,8 +60,8 @@
     "semantic_hash": ""
   },
   "src/app/page.tsx": {
-    "mtime": 1794673371.6609218,
-    "ast_hash": "b279f8efcb44b0fc3e8d9209850dfc5c",
+    "mtime": 1794833706.3989446,
+    "ast_hash": "2b4ef978877f598f8e187e26ae157be7",
     "semantic_hash": ""
   },
   "src/components/workspace/workspace.tsx": {
@@ -537,6 +537,16 @@
   "CLAUDE.md": {
     "mtime": 1794833486.3788123,
     "ast_hash": "f12e23aeb7ecea614d551af6438d5a4d",
+    "semantic_hash": ""
+  },
+  "scripts/test-app.mjs": {
+    "mtime": 1794833738.17082,
+    "ast_hash": "77f4ca3c120a6926d6c00b785b9f600e",
+    "semantic_hash": ""
+  },
+  "HANDOFF.md": {
+    "mtime": 1794833759.849068,
+    "ast_hash": "a22485c167a52bf6df417479c2889725",
     "semantic_hash": ""
   }
 }

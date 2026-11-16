@@ -1,32 +1,31 @@
 # HANDOFF
 
 ## Current task
-Automated testing and QA verification of The Resort Platform (mobile layout, typography, instant i18n, role access, and routing).
+End-to-End Playwright UI testing across Desktop (1440px), Mobile (393px), and Small Phone (375px).
 
 ## Status (done / in progress / blocked)
-Done. All 45 tests pass, linting passes with 0 warnings/errors, TypeScript typecheck passes with 0 errors, production build passes.
+Done. All 15 Playwright UI tests pass across 3 viewports. All 45 integration tests pass. Typecheck and lint pass.
 
 ## Files touched (path - what changed)
-- `src/app/page.tsx` - Extracted `getLiveSessionData()` helper outside JSX try/catch, resolving React 19 `react-hooks/error-boundaries` lint rule and removing unused variable.
-- `package.json` - Added `"test": "node scripts/test-app.mjs"` script.
-- `scripts/test-app.mjs` - Added automated 45-assertion test suite covering routing, auth protection, 5 roles, 6 feature views, and EN/TR localization.
-- `src/lib/i18n.ts` - Fixed `Dictionary` type definition to `Record<keyof typeof en, string>`.
+- `playwright.config.ts` - Configured 3 browser viewports: Desktop (1440px), Mobile Phone (393px), Small Phone (375px).
+- `tests/ui.spec.ts` - Added end-to-end browser tests for instant language toggle, mobile bottom nav vs. desktop sidebar, no-horizontal-scroll layout assertion, modal open/close, and booking views.
+- `package.json` - Added `@playwright/test` devDependency and `"test:ui": "playwright test"` script.
 
 ## Key decisions and why
-- Extracted live session query in `src/app/page.tsx` into an async helper function so component render remains purely declarative and complies with Next.js/React error boundary rules.
-- Added comprehensive endpoint test suite (`npm test`) covering unauthenticated redirects, all 5 role workspaces in both English and Turkish, and all 6 core feature views.
+- Automated browser testing validates exact CSS responsive behavior (e.g. `scrollWidth <= innerWidth` on small phones, sidebar hidden on `<=760px`, bottom nav visible).
+- Emulated both Pixel 7 (393px) and iPhone SE scale (375px) alongside desktop (1440px) to verify zero overflow or squishing across common mobile devices.
 
 ## Next steps (ordered)
-1. Commit changes to git and push to `main` so Vercel deploys the lint clean and test suite.
-2. Review optional retrieval MCP layers (Serena, cocoindex-code, claude-context) if needed.
+1. Commit test configuration and push to `main`.
+2. Provide test summary and instructions for running visual tests or opening the interactive emulator.
 
 ## Where to look (graph nodes, symbols, line ranges)
-- `scripts/test-app.mjs`: Test suite runner
-- `src/app/page.tsx#L32-L137`: Server page with clean `getLiveSessionData()`
-- `src/components/workspace/workspace.tsx`: Workspace component with all role views
+- `playwright.config.ts`: Viewport and project matrix
+- `tests/ui.spec.ts`: End-to-end UI specifications
+- `scripts/test-app.mjs`: Fast API/integration test suite
 
 ## Gotchas / commands to run (tests, build)
+- `npm run test:ui` - Run Playwright browser UI tests across all 3 viewports (15 tests)
+- `npm test` - Run full 45-assertion integration test suite
 - `npm run typecheck` - TypeScript check
-- `npm run lint` - ESLint check (0 errors, 0 warnings)
-- `npm test` - Run full 45-assertion integration test suite against running server
-- `npm run build` - Next.js production build
+- `npm run lint` - ESLint check
