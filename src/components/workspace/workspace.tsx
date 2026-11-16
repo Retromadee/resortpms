@@ -27,8 +27,9 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, type FormEvent, type ReactNode } from "react";
 
-import { LanguageSwitcher } from "@/components/language-switcher";
+import { LanguageSwitcher, useI18n } from "@/components/language-switcher";
 import { demoTickets } from "@/lib/demo-data";
+import type { Dictionary } from "@/lib/i18n";
 import type {
   Amenity,
   AuditEvent,
@@ -74,92 +75,110 @@ type WorkspaceProps = {
   dataWarning: string | null;
 };
 
-const roleTitles: Record<UserRole, string> = {
-  guest: "Guest",
-  resident: "Resident",
-  worker: "Worker",
-  management: "Management",
-  admin: "Administrator",
-};
+function getRoleTitles(t: Dictionary): Record<UserRole, string> {
+  return {
+    guest: t.guest,
+    resident: t.resident,
+    worker: t.worker,
+    management: t.management,
+    admin: t.admin,
+  };
+}
 
-const viewTitles: Record<View, string> = {
-  overview: "Overview",
-  tickets: "Service desk",
-  tasks: "My tasks",
-  units: "Unit registry",
-  facilities: "Facilities",
-  bookings: "Amenity bookings",
-  notifications: "Notifications",
-  activity: "Audit activity",
-};
+function getViewTitles(t: Dictionary): Record<View, string> {
+  return {
+    overview: t.overview,
+    tickets: t.serviceDesk,
+    tasks: t.myTasks,
+    units: t.unitRegistry,
+    facilities: t.facilities,
+    bookings: t.amenityBookings,
+    notifications: t.notifications,
+    activity: t.auditActivity,
+  };
+}
 
-const unitStatusTitles: Record<UnitStatus, string> = {
-  for_sale: "For sale",
-  for_rent: "For rent",
-  bnb: "BnB",
-  owner_occupied: "Owner occupied",
-  maintenance: "Maintenance",
-};
+function getUnitStatusTitles(t: Dictionary): Record<UnitStatus, string> {
+  return {
+    for_sale: t.statusForSale,
+    for_rent: t.statusForRent,
+    bnb: t.statusBnb,
+    owner_occupied: t.statusOwnerOccupied,
+    maintenance: t.statusMaintenance,
+  };
+}
 
-const ticketStatusTitles: Record<TicketStatus, string> = {
-  open: "Open",
-  assigned: "Assigned",
-  in_progress: "In progress",
-  done: "Resolved",
-};
+function getTicketStatusTitles(t: Dictionary): Record<TicketStatus, string> {
+  return {
+    open: t.statusOpen,
+    assigned: t.statusAssigned,
+    in_progress: t.statusInProgress,
+    done: t.statusDone,
+  };
+}
 
-const facilityStatusTitles: Record<FacilityStatus, string> = {
-  ok: "All clear",
-  attention: "Needs attention",
-  closed: "Closed",
-};
+function getFacilityStatusTitles(t: Dictionary): Record<FacilityStatus, string> {
+  return {
+    ok: t.statusOk,
+    attention: t.statusAttention,
+    closed: t.statusClosed,
+  };
+}
 
-const navByRole: Record<UserRole, { view: View; label: string; icon: typeof Home }[]> = {
+const navViewsByRole: Record<UserRole, { view: View; icon: typeof Home }[]> = {
   guest: [
-    { view: "overview", label: "My stay", icon: Home },
-    { view: "bookings", label: "Book an amenity", icon: CalendarDays },
-    { view: "tickets", label: "My requests", icon: Ticket },
-    { view: "notifications", label: "Notifications", icon: Bell },
+    { view: "overview", icon: Home },
+    { view: "bookings", icon: CalendarDays },
+    { view: "tickets", icon: Ticket },
+    { view: "notifications", icon: Bell },
   ],
   resident: [
-    { view: "overview", label: "My home", icon: Home },
-    { view: "tickets", label: "Service requests", icon: Ticket },
-    { view: "bookings", label: "Amenity bookings", icon: CalendarDays },
-    { view: "facilities", label: "Facilities", icon: Waves },
-    { view: "notifications", label: "Notifications", icon: Bell },
+    { view: "overview", icon: Home },
+    { view: "tickets", icon: Ticket },
+    { view: "bookings", icon: CalendarDays },
+    { view: "facilities", icon: Waves },
+    { view: "notifications", icon: Bell },
   ],
   worker: [
-    { view: "tasks", label: "My tasks", icon: ClipboardList },
-    { view: "facilities", label: "Facility checks", icon: ClipboardCheck },
-    { view: "tickets", label: "Service desk", icon: Ticket },
-    { view: "notifications", label: "Notifications", icon: Bell },
+    { view: "tasks", icon: ClipboardList },
+    { view: "facilities", icon: ClipboardCheck },
+    { view: "tickets", icon: Ticket },
+    { view: "notifications", icon: Bell },
   ],
   management: [
-    { view: "overview", label: "Overview", icon: LayoutDashboard },
-    { view: "tickets", label: "Service desk", icon: Ticket },
-    { view: "units", label: "Unit registry", icon: DoorOpen },
-    { view: "facilities", label: "Facilities", icon: Waves },
-    { view: "bookings", label: "Bookings", icon: CalendarDays },
-    { view: "notifications", label: "Notifications", icon: Bell },
+    { view: "overview", icon: LayoutDashboard },
+    { view: "tickets", icon: Ticket },
+    { view: "units", icon: DoorOpen },
+    { view: "facilities", icon: Waves },
+    { view: "bookings", icon: CalendarDays },
+    { view: "notifications", icon: Bell },
   ],
   admin: [
-    { view: "overview", label: "Overview", icon: LayoutDashboard },
-    { view: "tickets", label: "Service desk", icon: Ticket },
-    { view: "units", label: "Unit registry", icon: DoorOpen },
-    { view: "facilities", label: "Facilities", icon: Waves },
-    { view: "bookings", label: "Bookings", icon: CalendarDays },
-    { view: "activity", label: "Audit activity", icon: Activity },
-    { view: "notifications", label: "Notifications", icon: Bell },
+    { view: "overview", icon: LayoutDashboard },
+    { view: "tickets", icon: Ticket },
+    { view: "units", icon: DoorOpen },
+    { view: "facilities", icon: Waves },
+    { view: "bookings", icon: CalendarDays },
+    { view: "activity", icon: Activity },
+    { view: "notifications", icon: Bell },
   ],
 };
 
-const roleWelcome: Record<UserRole, { title: string; detail: string }> = {
-  guest: { title: "Your stay, made easy.", detail: "A little time for yourself goes a long way." },
-  resident: { title: "Welcome home.", detail: "Here is what is happening around your home today." },
-  worker: { title: "Good morning.", detail: "Your tasks and facility checks are ready." },
-  management: { title: "Good morning.", detail: "Here is what is happening across The Resort today." },
-  admin: { title: "Operations at a glance.", detail: "Review activity and keep the resort running smoothly." },
-};
+function getNavLabel(view: View, role: UserRole, t: Dictionary): string {
+  if (view === "overview") {
+    return role === "guest" ? t.myCurrentStay : role === "resident" ? t.myHome : t.overview;
+  }
+  if (view === "tickets") {
+    return role === "guest" || role === "resident" ? t.myRequests : t.serviceDesk;
+  }
+  if (view === "tasks") return t.myTasks;
+  if (view === "units") return t.unitRegistry;
+  if (view === "facilities") return role === "worker" ? t.facilityChecks : t.facilities;
+  if (view === "bookings") return t.amenityBookings;
+  if (view === "notifications") return t.notifications;
+  if (view === "activity") return t.auditActivity;
+  return view;
+}
 
 const amenityEmojis: Record<string, string> = {
   Spa: "✦",
@@ -176,7 +195,7 @@ function getDefaultView(role: UserRole): View {
 }
 
 function getInitialView(value: string | undefined, role: UserRole): View {
-  const allowedViews = navByRole[role].map((item) => item.view);
+  const allowedViews = navViewsByRole[role].map((item) => item.view);
   return value && allowedViews.includes(value as View) ? (value as View) : getDefaultView(role);
 }
 
@@ -215,18 +234,19 @@ function isNotificationRecord(value: unknown): value is Notification {
     typeof value.created_at === "string";
 }
 
-function dateLabel(value: string | null | undefined) {
-  if (!value) return "Not checked yet";
-  return new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
+function dateLabel(value: string | null | undefined, lang: string = "en", notCheckedText: string = "Not checked yet") {
+  if (!value) return notCheckedText;
+  const locale = lang === "tr" ? "tr-TR" : "en-GB";
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(new Date(value));
 }
 
-function relativeTime(value: string) {
+function relativeTime(value: string, t: Dictionary) {
   const minutes = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 60_000));
-  if (minutes < 1) return "Just now";
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 1) return t.justNow;
+  if (minutes < 60) return `${minutes}${t.mAgo}`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h ago`;
-  return `${Math.floor(hours / 24)}d ago`;
+  if (hours < 24) return `${hours}${t.hAgo}`;
+  return `${Math.floor(hours / 24)}${t.dAgo}`;
 }
 
 function StatusPill({ value, label }: { value: string; label: string }) {
@@ -271,7 +291,7 @@ function PanelHeader({
         <h2>{title}</h2>
         {detail && <p>{detail}</p>}
       </div>
-      {link && <Link className="text-link" href={link.href}>{link.label}<ArrowRight size={13} /></Link>}
+      {link && <Link className="text-link" href={link.href}>{link.label} <ArrowRight size={13} /></Link>}
     </div>
   );
 }
@@ -331,29 +351,36 @@ function WorkspaceShell({
   currentView: View;
   unreadCount: number;
 }) {
-  const nav = navByRole[role];
+  const { t } = useI18n();
+  const roleTitles = getRoleTitles(t);
+  const viewTitles = getViewTitles(t);
+  const navItems = navViewsByRole[role];
+
   const mobileViews: View[] = role === "admin"
     ? ["overview", "tickets", "units", "activity", "facilities"]
     : role === "management"
       ? ["overview", "tickets", "units", "facilities", "bookings"]
-      : nav.slice(0, 5).map((item) => item.view);
-  const mobileNav = mobileViews.map((view) => nav.find((item) => item.view === view)).filter((item) => item !== undefined);
+      : navItems.slice(0, 5).map((item) => item.view);
+
+  const mobileNav = mobileViews
+    .map((view) => navItems.find((item) => item.view === view))
+    .filter((item): item is { view: View; icon: typeof Home } => item !== undefined);
 
   return (
     <div className="workspace">
       <aside className="sidebar">
         <Link href="/" className="brand">
           <span className="brand-mark"><Waves size={21} aria-hidden="true" /></span>
-          <span>The Resort<small>TATLISU · NORTH CYPRUS</small></span>
+          <span>{t.resortTitle}<small>{t.resortLocation}</small></span>
         </Link>
-        <p className="workspace-label">WORKSPACE</p>
+        <p className="workspace-label">{t.workspaceLabel}</p>
         <nav className="nav-list" aria-label="Main navigation">
-          {nav.map((item) => (
+          {navItems.map((item) => (
             <WorkspaceLink
               key={item.view}
               view={item.view}
               currentView={currentView}
-              label={item.label}
+              label={getNavLabel(item.view, role, t)}
               icon={item.icon}
               count={item.view === "tickets" ? 3 : item.view === "notifications" && unreadCount ? unreadCount : undefined}
             />
@@ -362,8 +389,8 @@ function WorkspaceShell({
         <div className="sidebar-bottom">
           <div className="support-card">
             <span className="support-icon"><CircleHelp size={16} /></span>
-            <strong>Need a hand?</strong>
-            <p>Our team is here to make your stay a little easier.</p>
+            <strong>{t.needAHand}</strong>
+            <p>{t.supportBody}</p>
           </div>
           <div className="profile-mini">
             <span className="avatar">{initials(profile.full_name || roleTitles[role])}</span>
@@ -374,11 +401,11 @@ function WorkspaceShell({
 
       <div className="main-column">
         <header className="topbar">
-          <div className="breadcrumb">The Resort <span aria-hidden="true">/</span> <strong>{viewTitles[currentView]}</strong></div>
+          <div className="breadcrumb">{t.breadcrumbPrefix} <span aria-hidden="true">/</span> <strong>{viewTitles[currentView]}</strong></div>
           <div className="top-actions">
             <LanguageSwitcher compact />
             {mode === "preview" ? (
-              <span className="role-pill">Preview · {roleTitles[role]}</span>
+              <span className="role-pill">{t.preview} · {roleTitles[role]}</span>
             ) : (
               <span className="role-pill">{roleTitles[role]}</span>
             )}
@@ -388,7 +415,7 @@ function WorkspaceShell({
             </Link>
             {mode === "live" && (
               <form action="/logout" method="post">
-                <button className="icon-button" type="submit" aria-label="Sign out"><LogOut size={17} /></button>
+                <button className="icon-button" type="submit" aria-label={t.signOut} title={t.signOut}><LogOut size={17} /></button>
               </form>
             )}
           </div>
@@ -400,7 +427,7 @@ function WorkspaceShell({
         {mobileNav.map((item) => (
           <Link key={item.view} href={`/?view=${item.view}`} className={`mobile-nav-link ${currentView === item.view ? "active" : ""}`}>
             <item.icon />
-            <span>{item.label}</span>
+            <span>{getNavLabel(item.view, role, t)}</span>
           </Link>
         ))}
       </nav>
@@ -423,36 +450,46 @@ function OverviewView({
   reservations: Reservation[];
   onCreateTicket: () => void;
 }) {
+  const { t, lang } = useI18n();
   const openCount = tickets.filter((ticket) => ticket.status !== "done").length;
   const readyFacilities = facilities.filter((facility) => facility.status === "ok").length;
   const occupiedUnits = units.filter((unit) => unit.status === "bnb" || unit.status === "owner_occupied").length;
-  const greeting = roleWelcome[role];
+
+  const greetings: Record<UserRole, { title: string; detail: string }> = {
+    guest: { title: t.guestTitle, detail: t.guestDetail },
+    resident: { title: t.residentTitle, detail: t.residentDetail },
+    worker: { title: t.workerTitle, detail: t.workerDetail },
+    management: { title: t.mgmtTitle, detail: t.mgmtDetail },
+    admin: { title: t.adminTitle, detail: t.adminDetail },
+  };
+
+  const greeting = greetings[role];
 
   if (role === "guest" || role === "resident") {
     return (
       <>
-        <PageHeading eyebrow="YOUR RESORT, IN GOOD HANDS" title={greeting.title} detail={greeting.detail} />
+        <PageHeading eyebrow={t.yourResort} title={greeting.title} detail={greeting.detail} />
         <div className="stats-grid">
-          <StatCard label={role === "guest" ? "My current stay" : "My home"} value={role === "guest" ? "A-204" : "A-101"} caption={role === "guest" ? "Check out · Friday, 11:00" : "Everything in one place"} icon={<Home size={17} />} tone="green" />
-          <StatCard label="Upcoming bookings" value={String(reservations.length)} caption="Your next moments, planned" icon={<CalendarDays size={17} />} tone="sand" />
-          <StatCard label="My requests" value={String(tickets.filter((ticket) => ticket.status !== "done").length)} caption="We are on it" icon={<Ticket size={17} />} tone="blue" />
-          <StatCard label="Facilities" value={`${readyFacilities}/${facilities.length}`} caption="Open and ready to enjoy" icon={<Waves size={17} />} tone="rose" />
+          <StatCard label={role === "guest" ? t.myCurrentStay : t.myHome} value={role === "guest" ? "A-204" : "A-101"} caption={role === "guest" ? t.checkOutFriday : t.everythingInOnePlace} icon={<Home size={17} />} tone="green" />
+          <StatCard label={t.upcomingBookings} value={String(reservations.length)} caption={t.yourNextMoments} icon={<CalendarDays size={17} />} tone="sand" />
+          <StatCard label={t.myRequests} value={String(openCount)} caption={t.weAreOnIt} icon={<Ticket size={17} />} tone="blue" />
+          <StatCard label={t.facilitiesLabel} value={`${readyFacilities}/${facilities.length}`} caption={t.openAndReady} icon={<Waves size={17} />} tone="rose" />
         </div>
         <div className="dashboard-grid">
           <section className="panel">
-            <PanelHeader title="My recent requests" detail="A little update goes a long way." link={{ label: "View all", href: "/?view=tickets" }} />
-            {tickets.length ? <TicketList tickets={tickets.slice(0, 4)} /> : <EmptyState text="No requests yet. If something needs attention, we are just a tap away." />}
+            <PanelHeader title={t.myRecentRequests} detail={t.aLittleUpdate} link={{ label: t.viewAll, href: "/?view=tickets" }} />
+            {tickets.length ? <TicketList tickets={tickets.slice(0, 4)} /> : <EmptyState text={t.noRequestsMatch} />}
           </section>
           <section className="panel">
-            <PanelHeader title="Around the resort" detail="A quick look at today's facilities" />
+            <PanelHeader title={t.aroundTheResort} detail={t.quickLookFacilities} />
             <FacilityTiles facilities={facilities.slice(0, 4)} />
             <div className="capacity-wrap">
-              <div className="capacity-label"><span>Next booking</span><strong>{reservations[0] ? dateLabel(reservations[0].starts_at) : "No bookings yet"}</strong></div>
-              <div className="capacity-foot"><span>{reservations.length} upcoming reservation{reservations.length === 1 ? "" : "s"}</span><span>Updated just now</span></div>
+              <div className="capacity-label"><span>{t.nextBooking}</span><strong>{reservations[0] ? dateLabel(reservations[0].starts_at, lang, t.notCheckedYet) : t.noBookingsYet}</strong></div>
+              <div className="capacity-foot"><span>{reservations.length} {reservations.length === 1 ? t.upcomingReservation : t.upcomingReservations}</span><span>{t.updatedJustNow}</span></div>
             </div>
           </section>
         </div>
-        <div className="section-spacer"><button className="button button-primary" onClick={onCreateTicket}><Plus size={15} /> Let us know what you need</button></div>
+        <div className="section-spacer"><button className="button button-primary" onClick={onCreateTicket}><Plus size={15} /> {t.letUsKnow}</button></div>
       </>
     );
   }
@@ -461,51 +498,53 @@ function OverviewView({
     const assigned = tickets.filter((ticket) => ticket.status !== "done");
     return (
       <>
-        <PageHeading eyebrow="YOUR SHIFT" title={greeting.title} detail={greeting.detail} action={<Link className="button button-primary" href="/?view=facilities"><ClipboardCheck size={15} /> Start a facility check</Link>} />
+        <PageHeading eyebrow={t.yourShift} title={greeting.title} detail={greeting.detail} action={<Link className="button button-primary" href="/?view=facilities"><ClipboardCheck size={15} /> {t.startFacilityCheck}</Link>} />
         <div className="stats-grid">
-          <StatCard label="Assigned to me" value={String(assigned.length)} caption="Tasks in your queue" icon={<ClipboardList size={17} />} tone="green" />
-          <StatCard label="High priority" value={String(assigned.filter((ticket) => ticket.priority === "high").length)} caption="Needs a closer look" icon={<AlertCircle size={17} />} tone="rose" />
-          <StatCard label="Facility checks" value="2 / 4" caption="Today's checklist" icon={<ClipboardCheck size={17} />} tone="blue" />
-          <StatCard label="Completed today" value="6" caption="Nice work this shift" icon={<Check size={17} />} tone="sand" />
+          <StatCard label={t.assignedToMe} value={String(assigned.length)} caption={t.tasksInQueue} icon={<ClipboardList size={17} />} tone="green" />
+          <StatCard label={t.highPriority} value={String(assigned.filter((ticket) => ticket.priority === "high").length)} caption={t.needsCloserLook} icon={<AlertCircle size={17} />} tone="rose" />
+          <StatCard label={t.facilityChecks} value="2 / 4" caption={t.todaysChecklist} icon={<ClipboardCheck size={17} />} tone="blue" />
+          <StatCard label={t.completedToday} value="6" caption={t.niceWork} icon={<Check size={17} />} tone="sand" />
         </div>
         <section className="panel">
-          <PanelHeader title="Your task list" detail="Start with the item that needs you most." link={{ label: "Open task list", href: "/?view=tasks" }} />
-          {assigned.length ? <TicketList tickets={assigned.slice(0, 5)} /> : <EmptyState text="You're all caught up. Check back for new assignments." />}
+          <PanelHeader title={t.yourTaskList} detail={t.startWithItem} link={{ label: t.openTaskList, href: "/?view=tasks" }} />
+          {assigned.length ? <TicketList tickets={assigned.slice(0, 5)} /> : <EmptyState text={t.allCaughtUp} />}
         </section>
       </>
     );
   }
 
+  const todayLabel = new Intl.DateTimeFormat(lang === "tr" ? "tr-TR" : "en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase();
+
   return (
     <>
       <PageHeading
-        eyebrow={new Intl.DateTimeFormat("en-GB", { weekday: "long", day: "numeric", month: "long" }).format(new Date()).toUpperCase()}
+        eyebrow={todayLabel}
         title={greeting.title}
         detail={greeting.detail}
-        action={<button className="button button-primary" onClick={onCreateTicket}><Plus size={15} /> New request</button>}
+        action={<button className="button button-primary" onClick={onCreateTicket}><Plus size={15} /> {t.newRequest}</button>}
       />
       <div className="stats-grid">
-        <StatCard label="Total residences" value={String(units.length)} caption="Sample development units" icon={<Home size={17} />} tone="green" />
-        <StatCard label="Open requests" value={String(openCount)} caption="Across all departments" icon={<Ticket size={17} />} tone="sand" />
-        <StatCard label="Facilities ready" value={`${readyFacilities}/${facilities.length}`} caption="Last inspection this morning" icon={<Waves size={17} />} tone="blue" />
-        <StatCard label="Upcoming bookings" value={String(reservations.length)} caption="Sample development reservations" icon={<CalendarDays size={17} />} tone="rose" />
+        <StatCard label={t.totalResidences} value={String(units.length)} caption={t.sampleUnits} icon={<Home size={17} />} tone="green" />
+        <StatCard label={t.openRequests} value={String(openCount)} caption={t.acrossAllDepts} icon={<Ticket size={17} />} tone="sand" />
+        <StatCard label={t.facilitiesReady} value={`${readyFacilities}/${facilities.length}`} caption={t.lastInspection} icon={<Waves size={17} />} tone="blue" />
+        <StatCard label={t.upcomingBookings} value={String(reservations.length)} caption={t.sampleReservations} icon={<CalendarDays size={17} />} tone="rose" />
       </div>
       <div className="dashboard-grid">
         <section className="panel">
-          <PanelHeader title="Service desk" detail={`${openCount} requests need attention today`} link={{ label: "View all tickets", href: "/?view=tickets" }} />
-          {tickets.length ? <TicketList tickets={tickets.slice(0, 5)} /> : <EmptyState text="No service requests to show." />}
+          <PanelHeader title={t.serviceDeskPanel} detail={`${openCount} ${t.needAttentionToday}`} link={{ label: t.viewAllTickets, href: "/?view=tickets" }} />
+          {tickets.length ? <TicketList tickets={tickets.slice(0, 5)} /> : <EmptyState text={t.noRequestsMatch} />}
         </section>
         <div className="side-stack">
           <section className="panel">
-            <PanelHeader title="Facility status" detail={`${readyFacilities} of ${facilities.length} ready`} link={{ label: "View facilities", href: "/?view=facilities" }} />
+            <PanelHeader title={t.facilityStatus} detail={`${readyFacilities} / ${facilities.length} ${t.ofReady}`} link={{ label: t.viewFacilities, href: "/?view=facilities" }} />
             <FacilityTiles facilities={facilities.slice(0, 4)} />
           </section>
           <section className="panel section-spacer">
-            <PanelHeader title="Residence mix" link={{ label: "Unit registry", href: "/?view=units" }} />
+            <PanelHeader title={t.residenceMix} link={{ label: t.unitRegistryLink, href: "/?view=units" }} />
             <div className="capacity-wrap">
-              <div className="capacity-label"><span>Occupied or hosting</span><strong>{occupiedUnits} / {units.length}</strong></div>
+              <div className="capacity-label"><span>{t.occupiedOrHosting}</span><strong>{occupiedUnits} / {units.length}</strong></div>
               <div className="progress-track"><div className="progress-fill" style={{ width: `${units.length ? Math.round((occupiedUnits / units.length) * 100) : 0}%` }} /></div>
-              <div className="capacity-foot"><span>BnB & owner occupied</span><span>{units.length ? Math.round((occupiedUnits / units.length) * 100) : 0}%</span></div>
+              <div className="capacity-foot"><span>{t.bnbAndOwnerOccupied}</span><span>{units.length ? Math.round((occupiedUnits / units.length) * 100) : 0}%</span></div>
             </div>
           </section>
         </div>
@@ -515,6 +554,9 @@ function OverviewView({
 }
 
 function TicketList({ tickets }: { tickets: ResortTicket[] }) {
+  const { t } = useI18n();
+  const ticketStatusTitles = getTicketStatusTitles(t);
+
   return (
     <div className="ticket-list">
       {tickets.map((ticket) => (
@@ -523,7 +565,7 @@ function TicketList({ tickets }: { tickets: ResortTicket[] }) {
             <span className={`priority-mark ${ticket.priority}`} />
             <div style={{ minWidth: 0 }}>
               <p className="ticket-title">#{ticket.id} · {ticket.title}</p>
-              <div className="ticket-meta"><span><MapPin size={11} /> {ticket.location}</span><span>{relativeTime(ticket.created_at)}</span></div>
+              <div className="ticket-meta"><span><MapPin size={11} /> {ticket.location}</span><span>{relativeTime(ticket.created_at, t)}</span></div>
             </div>
           </div>
           <StatusPill value={ticket.status} label={ticketStatusTitles[ticket.status]} />
@@ -534,6 +576,9 @@ function TicketList({ tickets }: { tickets: ResortTicket[] }) {
 }
 
 function FacilityTiles({ facilities }: { facilities: Facility[] }) {
+  const { t } = useI18n();
+  const facilityStatusTitles = getFacilityStatusTitles(t);
+
   return (
     <div className="facility-grid">
       {facilities.map((facility) => (
@@ -541,7 +586,7 @@ function FacilityTiles({ facilities }: { facilities: Facility[] }) {
           <strong>{facility.name}</strong>
           <div className="facility-tile-bottom">
             <StatusPill value={facility.status} label={facilityStatusTitles[facility.status]} />
-            <span>{relativeTime(facility.last_checked_at ?? new Date().toISOString())}</span>
+            <span>{relativeTime(facility.last_checked_at ?? new Date().toISOString(), t)}</span>
           </div>
         </div>
       ))}
@@ -588,6 +633,8 @@ function TicketsView({
   onTicketsChange: (tickets: ResortTicket[]) => void;
   teamMembers: Pick<Profile, "id" | "full_name" | "role">[];
 }) {
+  const { t } = useI18n();
+  const ticketStatusTitles = getTicketStatusTitles(t);
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -597,6 +644,12 @@ function TicketsView({
   });
   const canProgress = role === "worker";
   const canAssign = role === "management" || role === "admin";
+
+  const priorityLabels: Record<TicketPriority, string> = {
+    low: t.low,
+    medium: t.medium,
+    high: t.high,
+  };
 
   async function advanceTicket(ticket: ResortTicket) {
     const nextStatus: TicketStatus | null =
@@ -642,36 +695,36 @@ function TicketsView({
   return (
     <section className="table-panel">
       <div className="table-toolbar">
-        <TableSearch value={search} onChange={setSearch} placeholder="Search requests..." />
+        <TableSearch value={search} onChange={setSearch} placeholder={t.searchPlaceholder} />
         <div className="heading-actions">
-          <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label="Filter by status">
-            <option value="all">All statuses</option>
+          <select className="filter-select" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} aria-label={t.filterByStatus}>
+            <option value="all">{t.filterAll}</option>
             {Object.entries(ticketStatusTitles).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <button className="button button-primary" onClick={onCreate}><Plus size={14} /> New request</button>
+          <button className="button button-primary" onClick={onCreate}><Plus size={14} /> {t.newRequest}</button>
         </div>
       </div>
       {errorMessage && <div className="notice notice-error" role="alert">{errorMessage}</div>}
       {filtered.length ? (
         <div className="table-scroll">
           <table className="data-table">
-            <thead><tr><th>Request</th><th>Location</th><th>Priority</th><th>Status</th>{canAssign && <th>Assigned to</th>}<th>Created</th>{canProgress && <th>Action</th>}</tr></thead>
+            <thead><tr><th>{t.request}</th><th>{t.location}</th><th>{t.priority}</th><th>{t.status}</th>{canAssign && <th>{t.assignedTo}</th>}<th>{t.date}</th>{canProgress && <th>{t.actions}</th>}</tr></thead>
             <tbody>
               {filtered.map((ticket) => (
                 <tr key={ticket.id}>
                   <td><strong>#{ticket.id} · {ticket.title}</strong></td>
                   <td>{ticket.location}</td>
-                  <td><StatusPill value={`priority-${ticket.priority}`} label={ticket.priority} /></td>
+                  <td><StatusPill value={`priority-${ticket.priority}`} label={priorityLabels[ticket.priority] ?? ticket.priority} /></td>
                   <td><StatusPill value={ticket.status} label={ticketStatusTitles[ticket.status]} /></td>
-                  {canAssign && <td><select className="filter-select" aria-label={`Assign ticket ${ticket.id}`} value={ticket.assigned_to ?? ""} disabled={ticket.status === "done"} onChange={(event) => void assignTicket(ticket, event.target.value)}><option value="">Unassigned</option>{teamMembers.map((worker) => <option key={worker.id} value={worker.id}>{worker.full_name || "Worker"}</option>)}</select></td>}
-                  <td>{relativeTime(ticket.created_at)}</td>
-                  {canProgress && <td>{ticket.status !== "done" && ticket.assigned_to && <button className="text-link" onClick={() => void advanceTicket(ticket)}>{ticket.status === "assigned" ? "Start" : "Resolve"} <ArrowRight size={12} /></button>}</td>}
+                  {canAssign && <td><select className="filter-select" aria-label={`Assign ticket ${ticket.id}`} value={ticket.assigned_to ?? ""} disabled={ticket.status === "done"} onChange={(event) => void assignTicket(ticket, event.target.value)}><option value="">{t.unassigned}</option>{teamMembers.map((worker) => <option key={worker.id} value={worker.id}>{worker.full_name || "Worker"}</option>)}</select></td>}
+                  <td>{relativeTime(ticket.created_at, t)}</td>
+                  {canProgress && <td>{ticket.status !== "done" && ticket.assigned_to && <button className="text-link" onClick={() => void advanceTicket(ticket)}>{ticket.status === "assigned" ? t.start : t.resolve} <ArrowRight size={12} /></button>}</td>}
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      ) : <EmptyState text="No requests match this search. Try another filter or create a new request." />}
+      ) : <EmptyState text={t.noRequestsMatch} />}
       <span className="sr-only">{units.length} units and {facilities.length} facilities available; {stays.length} stays.</span>
     </section>
   );
@@ -682,6 +735,8 @@ function UnitsView({ units, mode, onUnitsChange }: {
   mode: "preview" | "live";
   onUnitsChange: (units: Unit[]) => void;
 }) {
+  const { t, lang } = useI18n();
+  const unitStatusTitles = getUnitStatusTitles(t);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState("all");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -708,9 +763,9 @@ function UnitsView({ units, mode, onUnitsChange }: {
   return (
     <section className="table-panel">
       <div className="table-toolbar">
-        <TableSearch value={search} onChange={setSearch} placeholder="Search units..." />
-        <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value)} aria-label="Filter by status">
-          <option value="all">All statuses</option>
+        <TableSearch value={search} onChange={setSearch} placeholder={t.searchPlaceholder} />
+        <select className="filter-select" value={status} onChange={(event) => setStatus(event.target.value)} aria-label={t.filterByStatus}>
+          <option value="all">{t.filterAll}</option>
           {Object.entries(unitStatusTitles).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
         </select>
       </div>
@@ -718,12 +773,12 @@ function UnitsView({ units, mode, onUnitsChange }: {
       {results.length ? (
         <div className="table-scroll">
           <table className="data-table">
-            <thead><tr><th>Unit</th><th>Type</th><th>Status</th><th>Last updated</th><th>Change status</th></tr></thead>
+            <thead><tr><th>{t.unit}</th><th>{t.type}</th><th>{t.status}</th><th>{t.lastUpdated}</th><th>{t.changeStatus}</th></tr></thead>
             <tbody>{results.map((unit) => (
               <tr key={unit.id}>
                 <td><strong>{unit.code}</strong></td><td>{unit.unit_type}</td>
                 <td><StatusPill value={`unit-${unit.status}`} label={unitStatusTitles[unit.status]} /></td>
-                <td>{dateLabel(unit.created_at)}</td>
+                <td>{dateLabel(unit.created_at, lang, t.notCheckedYet)}</td>
                 <td>
                   <select className="filter-select" aria-label={`Change status for ${unit.code}`} value={unit.status} onChange={(event) => void changeStatus(unit, event.target.value as UnitStatus)}>
                     {Object.entries(unitStatusTitles).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -733,7 +788,7 @@ function UnitsView({ units, mode, onUnitsChange }: {
             ))}</tbody>
           </table>
         </div>
-      ) : <EmptyState text="No units match your search." />}
+      ) : <EmptyState text={t.noUnitsMatch} />}
     </section>
   );
 }
@@ -744,6 +799,8 @@ function FacilitiesView({ facilities, role, mode, onFacilitiesChange }: {
   mode: "preview" | "live";
   onFacilitiesChange: (facilities: Facility[]) => void;
 }) {
+  const { t, lang } = useI18n();
+  const facilityStatusTitles = getFacilityStatusTitles(t);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const canCheck = role === "worker" || role === "management" || role === "admin";
 
@@ -772,19 +829,19 @@ function FacilitiesView({ facilities, role, mode, onFacilitiesChange }: {
         {facilities.map((facility) => (
           <article className="facility-card" key={facility.id}>
             <div className="facility-card-head">
-              <div><h3>{facility.name}</h3><p>Last checked {dateLabel(facility.last_checked_at)}</p></div>
+              <div><h3>{facility.name}</h3><p>{t.lastChecked} {dateLabel(facility.last_checked_at, lang, t.notCheckedYet)}</p></div>
               <StatusPill value={facility.status} label={facilityStatusTitles[facility.status]} />
             </div>
             <div className="facility-card-foot">
-              <span><Droplets size={12} /> Routine facility log</span>
+              <span><Droplets size={12} /> {t.routineFacilityLog}</span>
               {canCheck && (
                 <select className="filter-select" value="" aria-label={`Record check for ${facility.name}`} onChange={(event) => {
                   if (event.target.value) void recordCheck(facility, event.target.value as FacilityStatus);
                 }}>
-                  <option value="">Record check</option>
-                  <option value="ok">All clear</option>
-                  <option value="attention">Needs attention</option>
-                  <option value="closed">Closed</option>
+                  <option value="">{t.recordCheck}</option>
+                  <option value="ok">{t.allClear}</option>
+                  <option value="attention">{t.needsAttention}</option>
+                  <option value="closed">{t.closed}</option>
                 </select>
               )}
             </div>
@@ -803,6 +860,7 @@ function BookingsView({ amenities, reservations, role, mode, onReservationsChang
   mode: "preview" | "live";
   onReservationsChange: (reservations: Reservation[]) => void;
 }) {
+  const { t } = useI18n();
   const [amenityId, setAmenityId] = useState(amenities[0]?.id ?? "");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTime, setSelectedTime] = useState("09:00");
@@ -816,13 +874,13 @@ function BookingsView({ amenities, reservations, role, mode, onReservationsChang
     setErrorMessage(null);
     setSuccessMessage(null);
     if (!amenityId || !selectedDate || !selectedTime) {
-      setErrorMessage("Choose an amenity and a time.");
+      setErrorMessage(t.chooseAnAmenity);
       return;
     }
     const startsAt = `${selectedDate}T${selectedTime}`;
     const start = new Date(startsAt);
     if (Number.isNaN(start.getTime()) || start <= new Date()) {
-      setErrorMessage("Choose a future time for your booking.");
+      setErrorMessage(t.chooseFutureTime);
       return;
     }
     if (mode === "preview") {
@@ -830,13 +888,13 @@ function BookingsView({ amenities, reservations, role, mode, onReservationsChang
         { id: `preview-${Date.now()}`, amenity_id: amenityId, party_id: `demo-${role}`, starts_at: start.toISOString(), party_size: partySize, status: "confirmed", created_at: new Date().toISOString() },
         ...reservations,
       ]);
-      setSuccessMessage("Sample booking added to this preview.");
+      setSuccessMessage(t.sampleBookingAdded);
       return;
     }
     const supabase = createSupabaseBrowserClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      setErrorMessage("Your sign-in session has expired. Sign in again to make a booking.");
+      setErrorMessage(t.sessionExpiredBooking);
       return;
     }
     const { data, error } = await supabase.from("reservations").insert({
@@ -850,7 +908,7 @@ function BookingsView({ amenities, reservations, role, mode, onReservationsChang
       return;
     }
     onReservationsChange([data, ...reservations]);
-    setSuccessMessage("Your reservation is confirmed.");
+    setSuccessMessage(t.reservationConfirmed);
   }
 
   return (
@@ -858,35 +916,35 @@ function BookingsView({ amenities, reservations, role, mode, onReservationsChang
       <div className="booking-grid">
         {amenities.map((amenity) => (
           <article className="booking-card" key={amenity.id}>
-            <div className="booking-card-top"><span className="booking-emoji">{amenityEmojis[amenity.name] ?? "✦"}</span><span className="status-pill status-ok">Available</span></div>
-            <h3>{amenity.name}</h3><p>Choose a time that works for you. Availability is checked when you reserve.</p>
-            <div className="booking-capacity">Up to {amenity.capacity_per_slot} guests per time slot</div>
+            <div className="booking-card-top"><span className="booking-emoji">{amenityEmojis[amenity.name] ?? "✦"}</span><span className="status-pill status-ok">{t.available}</span></div>
+            <h3>{amenity.name}</h3><p>{t.chooseATime}</p>
+            <div className="booking-capacity">{t.upToGuests.replace("{n}", String(amenity.capacity_per_slot))}</div>
           </article>
         ))}
       </div>
       {canBook ? (
         <section className="table-panel section-spacer">
-          <PanelHeader title="Make a reservation" detail="Your booking is checked against the live slot capacity." />
+          <PanelHeader title={t.makeAReservation} detail={t.bookingCapacityCheck} />
           <form className="booking-form" onSubmit={(event) => void createReservation(event)}>
-            <div className="form-field"><label htmlFor="booking-amenity">Amenity</label><select id="booking-amenity" value={amenityId} onChange={(event) => setAmenityId(event.target.value)} required>{amenities.map((amenity) => <option key={amenity.id} value={amenity.id}>{amenity.name}</option>)}</select></div>
+            <div className="form-field"><label htmlFor="booking-amenity">{t.amenity}</label><select id="booking-amenity" value={amenityId} onChange={(event) => setAmenityId(event.target.value)} required>{amenities.map((amenity) => <option key={amenity.id} value={amenity.id}>{amenity.name}</option>)}</select></div>
             <DateAvailabilityPicker amenityId={amenityId} reservations={reservations} value={selectedDate} onChange={setSelectedDate} />
-            <div className="form-field"><label htmlFor="booking-time">Time</label><select id="booking-time" value={selectedTime} onChange={(event) => setSelectedTime(event.target.value)} required>{bookingTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></div>
-            <div className="form-field"><label htmlFor="booking-party">Guests</label><input id="booking-party" type="number" min={1} max={12} value={partySize} onChange={(event) => setPartySize(Number(event.target.value))} required /></div>
-            <button className="button button-primary"><CalendarDays size={14} /> Request a spot</button>
+            <div className="form-field"><label htmlFor="booking-time">{t.timeLabel}</label><select id="booking-time" value={selectedTime} onChange={(event) => setSelectedTime(event.target.value)} required>{bookingTimes.map((time) => <option key={time} value={time}>{time}</option>)}</select></div>
+            <div className="form-field"><label htmlFor="booking-party">{t.guests}</label><input id="booking-party" type="number" min={1} max={12} value={partySize} onChange={(event) => setPartySize(Number(event.target.value))} required /></div>
+            <button className="button button-primary"><CalendarDays size={14} /> {t.requestASpot}</button>
           </form>
           {errorMessage && <div className="notice notice-error" role="alert">{errorMessage}</div>}
           {successMessage && <div className="notice notice-warn" role="status">{successMessage}</div>}
         </section>
       ) : (
         <section className="panel section-spacer">
-          <PanelHeader title="Upcoming reservations" detail="Bookings are protected by database access rules." />
-          {reservations.length ? <ReservationList reservations={reservations} amenities={amenities} /> : <EmptyState text="No reservations are scheduled." />}
+          <PanelHeader title={t.upcomingReservationsTitle} detail={t.bookingsProtected} />
+          {reservations.length ? <ReservationList reservations={reservations} amenities={amenities} /> : <EmptyState text={t.noReservationsScheduled} />}
         </section>
       )}
       {canBook && (
         <section className="panel section-spacer">
-          <PanelHeader title="Your upcoming reservations" detail="Only bookings visible to your account are shown." />
-          {reservations.length ? <ReservationList reservations={reservations} amenities={amenities} /> : <EmptyState text="No upcoming bookings. Pick an amenity above to reserve your spot." />}
+          <PanelHeader title={t.yourUpcomingReservations} detail={t.onlyYourBookings} />
+          {reservations.length ? <ReservationList reservations={reservations} amenities={amenities} /> : <EmptyState text={t.noUpcomingBookings} />}
         </section>
       )}
     </>
@@ -905,7 +963,9 @@ function DateAvailabilityPicker({ amenityId, reservations, value, onChange }: {
   value: string;
   onChange: (value: string) => void;
 }) {
+  const { t, lang } = useI18n();
   const [open, setOpen] = useState(false);
+  const locale = lang === "tr" ? "tr-TR" : "en-GB";
   const days = useMemo(() => Array.from({ length: 14 }, (_, index) => {
     const day = new Date();
     day.setHours(12, 0, 0, 0);
@@ -918,28 +978,28 @@ function DateAvailabilityPicker({ amenityId, reservations, value, onChange }: {
       .map((reservation) => dateKey(new Date(reservation.starts_at))),
   ), [amenityId, reservations]);
   const selectedLabel = value
-    ? new Intl.DateTimeFormat("en-GB", { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00`))
-    : "Choose a date";
+    ? new Intl.DateTimeFormat(locale, { weekday: "short", day: "numeric", month: "short" }).format(new Date(`${value}T12:00:00`))
+    : t.chooseADate;
 
   return (
     <div className="form-field date-picker-field">
-      <label htmlFor="booking-date">Date</label>
+      <label htmlFor="booking-date">{t.dateLabel}</label>
       <div className="date-picker">
         <button id="booking-date" type="button" className="date-picker-trigger" aria-expanded={open} onClick={() => setOpen((current) => !current)}>
           <CalendarDays size={15} /> <span>{selectedLabel}</span><span className="date-picker-chevron">⌄</span>
         </button>
         {open && (
-          <div className="date-picker-menu" role="listbox" aria-label="Choose an available date">
+          <div className="date-picker-menu" role="listbox" aria-label={t.chooseADate}>
             {days.map((day) => {
               const key = dateKey(day);
               const isUnavailable = unavailable.has(key);
               return <button key={key} type="button" role="option" aria-selected={value === key} disabled={isUnavailable} className={`date-option ${value === key ? "selected" : ""}`} onClick={() => { onChange(key); setOpen(false); }}>
-                <span>{new Intl.DateTimeFormat("en-GB", { weekday: "short" }).format(day)}</span>
+                <span>{new Intl.DateTimeFormat(locale, { weekday: "short" }).format(day)}</span>
                 <strong>{day.getDate()}</strong>
-                <span className={`availability-marker ${isUnavailable ? "unavailable" : "available"}`} aria-label={isUnavailable ? "Not available" : "Available"} />
+                <span className={`availability-marker ${isUnavailable ? "unavailable" : "available"}`} aria-label={isUnavailable ? t.notAvailable : t.availableLabel} />
               </button>;
             })}
-            <div className="date-picker-legend"><span><i className="availability-marker available" /> Available</span><span><i className="availability-marker unavailable" /> Not available</span></div>
+            <div className="date-picker-legend"><span><i className="availability-marker available" /> {t.availableLabel}</span><span><i className="availability-marker unavailable" /> {t.notAvailable}</span></div>
           </div>
         )}
       </div>
@@ -948,6 +1008,8 @@ function DateAvailabilityPicker({ amenityId, reservations, value, onChange }: {
 }
 
 function ReservationList({ reservations, amenities }: { reservations: Reservation[]; amenities: Amenity[] }) {
+  const { t, lang } = useI18n();
+
   return (
     <div className="ticket-list">{reservations.map((reservation) => {
       const amenity = amenities.find((item) => item.id === reservation.amenity_id);
@@ -955,9 +1017,9 @@ function ReservationList({ reservations, amenities }: { reservations: Reservatio
         <div className="ticket-row" key={reservation.id}>
           <div className="ticket-main">
             <span className="stat-icon sand"><CalendarDays size={15} /></span>
-            <div><p className="ticket-title">{amenity?.name ?? "Resort amenity"}</p><div className="ticket-meta"><span>{dateLabel(reservation.starts_at)}</span><span>{reservation.party_size} guest{reservation.party_size === 1 ? "" : "s"}</span></div></div>
+            <div><p className="ticket-title">{amenity?.name ?? "Resort amenity"}</p><div className="ticket-meta"><span>{dateLabel(reservation.starts_at, lang, t.notCheckedYet)}</span><span>{reservation.party_size} {t.guests.toLowerCase()}</span></div></div>
           </div>
-          <StatusPill value={reservation.status === "confirmed" ? "ok" : "closed"} label={reservation.status} />
+          <StatusPill value={reservation.status === "confirmed" ? "ok" : "closed"} label={reservation.status === "confirmed" ? t.statusOk : t.statusClosed} />
         </div>
       );
     })}</div>
@@ -969,7 +1031,9 @@ function NotificationsView({ notifications, mode, onNotificationsChange }: {
   mode: "preview" | "live";
   onNotificationsChange: (notifications: Notification[]) => void;
 }) {
+  const { t } = useI18n();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   async function markAllRead() {
     setErrorMessage(null);
     const unread = notifications.filter((notification) => !notification.read);
@@ -980,7 +1044,7 @@ function NotificationsView({ notifications, mode, onNotificationsChange }: {
     const supabase = createSupabaseBrowserClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) {
-      setErrorMessage("Your sign-in session has expired. Sign in again.");
+      setErrorMessage(t.sessionExpired);
       return;
     }
     const { error } = await supabase.from("notifications").update({ read: true }).eq("user_id", user.id).eq("read", false);
@@ -991,9 +1055,10 @@ function NotificationsView({ notifications, mode, onNotificationsChange }: {
     onNotificationsChange(notifications.map((notification) => ({ ...notification, read: true })));
     if (unread.length === 0) return;
   }
+
   return (
     <section className="panel">
-      <PanelHeader title="Recent updates" detail="A clear view of what has changed." />
+      <PanelHeader title={t.recentUpdates} detail={t.clearView} />
       {errorMessage && <div className="notice notice-error" role="alert">{errorMessage}</div>}
       {notifications.length ? (
         <>
@@ -1001,30 +1066,32 @@ function NotificationsView({ notifications, mode, onNotificationsChange }: {
             <article className="ticket-row" key={notification.id}>
               <div className="ticket-main">
                 <span className={`stat-icon ${notification.read ? "blue" : "green"}`}><Bell size={15} /></span>
-                <div><p className="ticket-title">{notification.body}</p><div className="ticket-meta"><span>{relativeTime(notification.created_at)}</span>{!notification.read && <span>New</span>}</div></div>
+                <div><p className="ticket-title">{notification.body}</p><div className="ticket-meta"><span>{relativeTime(notification.created_at, t)}</span>{!notification.read && <span>{t.newLabel}</span>}</div></div>
               </div>
-              <StatusPill value={notification.read ? "done" : "assigned"} label={notification.read ? "Read" : "Unread"} />
+              <StatusPill value={notification.read ? "done" : "assigned"} label={notification.read ? t.read : t.unread} />
             </article>
           ))}</div>
-          <div className="table-toolbar"><span className="stat-caption">{notifications.filter((notification) => !notification.read).length} unread updates</span><button className="text-link" onClick={() => void markAllRead()}>Mark all as read <Check size={13} /></button></div>
+          <div className="table-toolbar"><span className="stat-caption">{notifications.filter((notification) => !notification.read).length} {t.unreadUpdates}</span><button className="text-link" onClick={() => void markAllRead()}>{t.markAllRead} <Check size={13} /></button></div>
         </>
-      ) : <EmptyState text="You are all caught up. New updates will appear here." />}
+      ) : <EmptyState text={t.allCaughtUp} />}
     </section>
   );
 }
 
 function ActivityView({ auditEvents }: { auditEvents: AuditEvent[] }) {
+  const { t } = useI18n();
+
   return (
     <section className="table-panel">
-      <PanelHeader title="Audit activity" detail="Administrative view of important operational changes." />
+      <PanelHeader title={t.auditActivityTitle} detail={t.adminViewChanges} />
       {auditEvents.length ? (
         <div className="table-scroll"><table className="data-table">
-          <thead><tr><th>Action</th><th>Area</th><th>Record</th><th>Details</th><th>When</th></tr></thead>
+          <thead><tr><th>{t.action}</th><th>{t.area}</th><th>{t.record}</th><th>{t.details}</th><th>{t.when}</th></tr></thead>
           <tbody>{auditEvents.map((event) => (
-            <tr key={event.id}><td><strong>{event.action}</strong></td><td>{event.entity}</td><td>{event.entity_id ?? "—"}</td><td>{Object.entries(event.detail).map(([key, value]) => `${key.replaceAll("_", " ")}: ${String(value)}`).join(" · ") || "—"}</td><td>{relativeTime(event.created_at)}</td></tr>
+            <tr key={event.id}><td><strong>{event.action}</strong></td><td>{event.entity}</td><td>{event.entity_id ?? "—"}</td><td>{Object.entries(event.detail).map(([key, value]) => `${key.replaceAll("_", " ")}: ${String(value)}`).join(" · ") || "—"}</td><td>{relativeTime(event.created_at, t)}</td></tr>
           ))}</tbody>
         </table></div>
-      ) : <EmptyState text="No audit events are visible to this account." />}
+      ) : <EmptyState text={t.noAuditEvents} />}
     </section>
   );
 }
@@ -1048,6 +1115,7 @@ function TicketModal({
   onClose: () => void;
   onCreated: (ticket: ResortTicket) => void;
 }) {
+  const { t } = useI18n();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState<TicketPriority>("medium");
@@ -1069,13 +1137,13 @@ function TicketModal({
     const selectedUnit = units.find((unit) => unit.id === unitId);
     const selectedFacility = facilities.find((facility) => facility.id === facilityId);
     if (!title.trim() || !locationId) {
-      setErrorMessage("Add a short description and choose a location.");
+      setErrorMessage(t.addDescAndLocation);
       setSaving(false);
       return;
     }
     const ticketLocation = selectedUnit?.code ?? selectedFacility?.name ?? "";
     if (!ticketLocation) {
-      setErrorMessage("Choose a valid location.");
+      setErrorMessage(t.chooseValidLocation);
       setSaving(false);
       return;
     }
@@ -1108,7 +1176,7 @@ function TicketModal({
       priority,
     }).select("id, title, description, location, unit_id, facility_id, priority, status, created_by, assigned_to, photo_path, created_at, updated_at").single();
     if (error) {
-      setErrorMessage(`Request could not be submitted: ${error.message}`);
+      setErrorMessage(`${t.requestCouldNotBeSubmitted}: ${error.message}`);
       setSaving(false);
       return;
     }
@@ -1124,35 +1192,35 @@ function TicketModal({
     <div className="modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget) onClose(); }}>
       <section className="modal" role="dialog" aria-modal="true" aria-labelledby="ticket-modal-title">
         <div className="modal-head">
-          <div><h2 id="ticket-modal-title">Raise a service request</h2><p>Tell us what needs attention and where.</p></div>
-          <button className="icon-button" onClick={onClose} aria-label="Close dialog"><X size={17} /></button>
+          <div><h2 id="ticket-modal-title">{t.raiseServiceRequest}</h2><p>{t.tellUsWhatNeedsAttention}</p></div>
+          <button className="icon-button" onClick={onClose} aria-label={t.closeDialog}><X size={17} /></button>
         </div>
         <form onSubmit={(event) => void submit(event)}>
           <div className="modal-body">
-            {mode === "preview" && <div className="notice notice-warn" style={{ margin: 0 }}>Sample preview only. This request is not saved to a database.</div>}
-            <div className="form-field"><label htmlFor="ticket-title">What do you need help with?</label><input autoFocus id="ticket-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="e.g. Air conditioning not cooling" required maxLength={120} /></div>
-            <div className="form-field"><label htmlFor="ticket-description">A few more details <span style={{ fontWeight: 400 }}>(optional)</span></label><textarea id="ticket-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder="Add any useful detail..." maxLength={2000} /></div>
-            <div className="form-field"><label htmlFor="ticket-location-kind">Where should we look?</label>
+            {mode === "preview" && <div className="notice notice-warn" style={{ margin: 0 }}>{t.samplePreviewOnly}</div>}
+            <div className="form-field"><label htmlFor="ticket-title">{t.whatDoYouNeedHelp}</label><input autoFocus id="ticket-title" value={title} onChange={(event) => setTitle(event.target.value)} placeholder={t.egAirConditioning} required maxLength={120} /></div>
+            <div className="form-field"><label htmlFor="ticket-description">{t.fewMoreDetails} <span style={{ fontWeight: 400 }}>({t.optional})</span></label><textarea id="ticket-description" value={description} onChange={(event) => setDescription(event.target.value)} placeholder={t.addAnyDetail} maxLength={2000} /></div>
+            <div className="form-field"><label htmlFor="ticket-location-kind">{t.whereShouldWeLook}</label>
               <select id="ticket-location-kind" value={locationKind} onChange={(event) => { setLocationKind(event.target.value as "unit" | "facility"); setLocationId(""); }}>
-                {showUnits && <option value="unit">My unit / a residence</option>}
-                {showFacilities && <option value="facility">A shared facility</option>}
+                {showUnits && <option value="unit">{t.myUnitOrResidence}</option>}
+                {showFacilities && <option value="facility">{t.aSharedFacility}</option>}
               </select>
             </div>
-            <div className="form-field"><label htmlFor="ticket-location">Location</label>
+            <div className="form-field"><label htmlFor="ticket-location">{t.location}</label>
               <select id="ticket-location" value={locationId} onChange={(event) => setLocationId(event.target.value)} required>
-                <option value="">Choose a location</option>
+                <option value="">{t.chooseALocation}</option>
                 {locationKind === "unit" ? allowedUnits.map((unit) => <option key={unit.id} value={unit.id}>{unit.code}</option>) :
                   facilityOptions.map((facility) => <option key={facility.id} value={facility.id}>{facility.name}</option>)}
               </select>
             </div>
-            <div className="form-field"><label htmlFor="ticket-priority">Priority</label>
+            <div className="form-field"><label htmlFor="ticket-priority">{t.priority}</label>
               <select id="ticket-priority" value={priority} onChange={(event) => setPriority(event.target.value as TicketPriority)}>
-                <option value="low">Low</option><option value="medium">Medium</option><option value="high">High</option>
+                <option value="low">{t.low}</option><option value="medium">{t.medium}</option><option value="high">{t.high}</option>
               </select>
             </div>
             {errorMessage && <div className="notice notice-error" style={{ margin: 0 }} role="alert">{errorMessage}</div>}
           </div>
-          <div className="modal-actions"><button type="button" className="button button-secondary" onClick={onClose}>Cancel</button><button className="button button-primary" disabled={saving}>{saving ? "Submitting..." : "Submit request"} <ArrowRight size={14} /></button></div>
+          <div className="modal-actions"><button type="button" className="button button-secondary" onClick={onClose}>{t.cancel}</button><button className="button button-primary" disabled={saving}>{saving ? t.submitting : t.submitRequest} <ArrowRight size={14} /></button></div>
         </form>
       </section>
     </div>
@@ -1167,6 +1235,8 @@ export function Workspace(props: WorkspaceProps) {
     profile,
     dataWarning,
   } = props;
+  const { t } = useI18n();
+  const roleTitles = getRoleTitles(t);
   const router = useRouter();
   const searchParams = useSearchParams();
   const [role, setRole] = useState(initialRole);
@@ -1277,31 +1347,31 @@ export function Workspace(props: WorkspaceProps) {
       return (
         <>
           <PageHeading
-            eyebrow={view === "tasks" ? "YOUR SHIFT" : "SERVICE DESK"}
-            title={view === "tasks" ? "My tasks" : role === "guest" || role === "resident" ? "My requests" : "Service desk"}
-            detail={view === "tasks" ? "Assigned work, in the order that matters." : "Every request has an owner, a status, and a next step."}
-            action={<button className="button button-primary" onClick={() => setShowTicketModal(true)}><Plus size={14} /> New request</button>}
+            eyebrow={view === "tasks" ? t.yourShift : t.serviceDesk.toUpperCase()}
+            title={view === "tasks" ? t.myTasks : role === "guest" || role === "resident" ? t.myRequests : t.serviceDesk}
+            detail={view === "tasks" ? t.tasksInQueue : t.aLittleUpdate}
+            action={<button className="button button-primary" onClick={() => setShowTicketModal(true)}><Plus size={14} /> {t.newRequest}</button>}
           />
           <TicketsView tickets={view === "tasks" ? visibleTickets.filter((ticket) => ticket.status !== "done") : visibleTickets} role={role} units={units} facilities={facilities} stays={props.stays} mode={mode} onCreate={() => setShowTicketModal(true)} onTicketsChange={updateVisibleTickets} teamMembers={props.teamMembers} />
         </>
       );
     }
     if (view === "units") {
-      return <><PageHeading eyebrow="RESORT OPERATIONS" title="Unit registry" detail="A live view of residences and their current status." /><UnitsView units={units} mode={mode} onUnitsChange={setUnits} /></>;
+      return <><PageHeading eyebrow={t.resortOperations} title={t.unitRegistry} detail={t.sampleUnits} /><UnitsView units={units} mode={mode} onUnitsChange={setUnits} /></>;
     }
     if (view === "facilities") {
-      return <><PageHeading eyebrow="ON-SITE OPERATIONS" title={role === "worker" ? "Facility checks" : "Facilities"} detail="Keep shared spaces safe, ready, and in good shape." /><FacilitiesView facilities={facilities} role={role} mode={mode} onFacilitiesChange={setFacilities} /></>;
+      return <><PageHeading eyebrow={t.onSiteOperations} title={role === "worker" ? t.facilityChecks : t.facilities} detail={t.openAndReady} /><FacilitiesView facilities={facilities} role={role} mode={mode} onFacilitiesChange={setFacilities} /></>;
     }
     if (view === "bookings") {
-      return <><PageHeading eyebrow="MAKE TIME FOR YOURSELF" title="Amenity bookings" detail="Find a moment for the spa, hamam, gym, paddle court, or cafe." /><BookingsView amenities={props.amenities} reservations={reservations} role={role} mode={mode} onReservationsChange={setReservations} /></>;
+      return <><PageHeading eyebrow={t.makeTimeForYourself} title={t.amenityBookings} detail={t.chooseATime} /><BookingsView amenities={props.amenities} reservations={reservations} role={role} mode={mode} onReservationsChange={setReservations} /></>;
     }
     if (view === "notifications") {
-      return <><PageHeading eyebrow="STAY IN THE LOOP" title="Notifications" detail="Important updates from your stay and resort operations." /><NotificationsView notifications={notifications} mode={mode} onNotificationsChange={setNotifications} /></>;
+      return <><PageHeading eyebrow={t.stayInTheLoop} title={t.notifications} detail={t.clearView} /><NotificationsView notifications={notifications} mode={mode} onNotificationsChange={setNotifications} /></>;
     }
     if (view === "activity") {
-      return <><PageHeading eyebrow="ADMINISTRATION" title="Audit activity" detail="A traceable history of important changes." /><ActivityView auditEvents={props.auditEvents} /></>;
+      return <><PageHeading eyebrow={t.administration} title={t.auditActivity} detail={t.adminViewChanges} /><ActivityView auditEvents={props.auditEvents} /></>;
     }
-    return <EmptyState text="This view is not available for your role." />;
+    return <EmptyState text={t.viewNotAvailable} />;
   }
 
   return (
@@ -1310,10 +1380,10 @@ export function Workspace(props: WorkspaceProps) {
         {mode === "preview" && (
           <div className="preview-banner">
             <Sparkles size={14} aria-hidden="true" />
-            <span><strong>Interactive preview</strong> · Sample records only. Actions stay in this browser session; nothing is sent to a database.</span>
-            <label className="sr-only" htmlFor="preview-role">Preview role</label>
+            <span><strong>{t.interactivePreview}</strong> · {t.previewBannerDetail}</span>
+            <label className="sr-only" htmlFor="preview-role">{t.preview}</label>
             <select id="preview-role" className="filter-select" value={role} onChange={(event) => changeRole(event.target.value as UserRole)}>
-              {Object.entries(roleTitles).map(([value, label]) => <option key={value} value={value}>{label} preview</option>)}
+              {Object.entries(roleTitles).map(([value, label]) => <option key={value} value={value}>{label} {t.previewSuffix}</option>)}
             </select>
           </div>
         )}

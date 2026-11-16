@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { GoogleTranslateScript } from "@/components/language-switcher";
+import { cookies } from "next/headers";
+import { LanguageProvider } from "@/components/language-switcher";
+import type { Language } from "@/lib/i18n";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,12 +18,15 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const cookieStore = await cookies();
+  const rawLang = cookieStore.get("resort_lang")?.value;
+  const initialLang: Language = rawLang === "tr" ? "tr" : "en";
+
   return (
-    <html lang="en">
+    <html lang={initialLang}>
       <body>
-        {children}
-        <GoogleTranslateScript />
+        <LanguageProvider initialLang={initialLang}>{children}</LanguageProvider>
       </body>
     </html>
   );
