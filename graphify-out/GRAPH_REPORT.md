@@ -1,16 +1,16 @@
 # Graph Report - resort-pms-demo  (2026-11-16)
 
 ## Corpus Check
-- 104 files · ~42,076 words
+- 106 files · ~43,189 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 507 nodes · 542 edges · 82 communities (24 shown, 58 thin omitted)
+- 512 nodes · 565 edges · 86 communities (28 shown, 58 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `0dddaa91`
+- Built from commit: `7467d8cf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -96,39 +96,41 @@
 - graphify reference: transcribe video and audio
 - graphify
 - extraction-spec.md
+- useI18n
+- proxy.ts
 
 ## God Nodes (most connected - your core abstractions)
 1. `useI18n()` - 19 edges
 2. `compilerOptions` - 16 edges
 3. `What You Must Do When Invoked` - 12 edges
-4. `/graphify` - 10 edges
-5. `isSupabaseConfigured()` - 9 edges
-6. `Section Definitions` - 9 edges
-7. `graphify reference: extra exports and benchmark` - 8 edges
-8. `HANDOFF` - 8 edges
-9. `Workspace()` - 8 edges
+4. `isSupabaseConfigured()` - 11 edges
+5. `/graphify` - 10 edges
+6. `Workspace()` - 9 edges
+7. `createSupabaseServerClient()` - 9 edges
+8. `Section Definitions` - 9 edges
+9. `scripts` - 8 edges
 10. `Changelog` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `LoginView()` --calls--> `useI18n()`  [EXTRACTED]
+  src/app/login/login-view.tsx → src/components/language-switcher.tsx
 - `LoginPage()` --calls--> `isSupabaseConfigured()`  [EXTRACTED]
   src/app/login/page.tsx → src/lib/supabase/server.ts
 - `BookingsView()` --calls--> `useI18n()`  [EXTRACTED]
   src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
+- `DateAvailabilityPicker()` --calls--> `useI18n()`  [EXTRACTED]
+  src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
 - `TicketModal()` --calls--> `useI18n()`  [EXTRACTED]
   src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
-- `signIn()` --calls--> `createSupabaseServerClient()`  [EXTRACTED]
-  src/app/login/actions.ts → src/lib/supabase/server.ts
-- `signIn()` --calls--> `isSupabaseConfigured()`  [EXTRACTED]
-  src/app/login/actions.ts → src/lib/supabase/server.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (82 total, 58 thin omitted)
+## Communities (86 total, 58 thin omitted)
 
 ### Community 0 - "workspace.tsx"
-Cohesion: 0.06
-Nodes (53): metadata, viewport, DEMO_ROLES, errorKeyMap, LoginView(), LoginViewProps, I18nContext, I18nContextValue (+45 more)
+Cohesion: 0.11
+Nodes (19): amenityEmojis, bookingTimes, DateAvailabilityPicker(), dateKey(), getDefaultView(), getInitialView(), getNavLabel(), getRoleTitles() (+11 more)
 
 ### Community 1 - "database.types.ts"
 Cohesion: 0.22
@@ -140,19 +142,19 @@ Nodes (26): AGENTS.md — The Resort Platform demo, Always, Product (keep it sim
 
 ### Community 3 - "dependencies"
 Cohesion: 0.08
-Nodes (23): lucide-react, next, dependencies, lucide-react, next, react, react-dom, @supabase/ssr (+15 more)
+Nodes (24): lucide-react, next, dependencies, lucide-react, next, react, react-dom, @supabase/ssr (+16 more)
 
 ### Community 4 - "compilerOptions"
 Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
 ### Community 5 - "devDependencies"
-Cohesion: 0.12
-Nodes (17): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, tailwindcss, @tailwindcss/turbopack, @types/node (+9 more)
+Cohesion: 0.11
+Nodes (19): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, @playwright/test, tailwindcss, @tailwindcss/turbopack (+11 more)
 
 ### Community 6 - "isSupabaseConfigured"
-Cohesion: 0.27
-Nodes (10): DEMO_USERS, quickDemoSignIn(), signIn(), signOut(), signUp(), LoginPage(), LoginPageProps, POST() (+2 more)
+Cohesion: 0.10
+Nodes (28): metadata, viewport, DEMO_USERS, quickDemoSignIn(), signIn(), signOut(), signUp(), DEMO_ROLES (+20 more)
 
 ### Community 7 - "include"
 Cohesion: 0.10
@@ -175,8 +177,8 @@ Cohesion: 0.12
 Nodes (15): 1. Concrete Transformation Patterns, 2. Error-First Structure, 3. Quantified Impact, 4. Self-Contained Examples, 5. Semantic Naming, Code Example Standards, Comments, Impact Level Guidelines (+7 more)
 
 ### Community 34 - "demo-data.ts"
-Cohesion: 0.07
-Nodes (32): config, Amenity, AuditEvent, Database, DemoPayment, Facility, FacilityStatus, Inspection (+24 more)
+Cohesion: 0.10
+Nodes (19): Amenity, AuditEvent, DemoPayment, Facility, FacilityStatus, Inspection, Notification, Profile (+11 more)
 
 ### Community 35 - "Section Definitions"
 Cohesion: 0.20
@@ -195,8 +197,8 @@ Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 72 - "app/page.tsx"
-Cohesion: 0.50
-Nodes (4): demoRoleProfiles, getLiveSessionData(), HomePage(), HomePageProps
+Cohesion: 0.21
+Nodes (13): demoRoleProfiles, HomePageProps, demoAmenities, demoAuditEvents, demoFacilities, demoNotifications, demoProfile, demoReservations (+5 more)
 
 ### Community 73 - "Low-token codebase navigation"
 Cohesion: 0.25
@@ -218,8 +220,16 @@ Nodes (3): For git commit hook, For native CLAUDE.md integration, graphify refer
 Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
+### Community 84 - "useI18n"
+Cohesion: 0.18
+Nodes (17): useI18n(), ActivityView(), BookingsView(), dateLabel(), FacilitiesView(), FacilityTiles(), getFacilityStatusTitles(), getTicketStatusTitles() (+9 more)
+
+### Community 85 - "proxy.ts"
+Cohesion: 0.33
+Nodes (3): config, Database, createSupabaseBrowserClient()
+
 ## Knowledge Gaps
-- **271 isolated node(s):** `graphify`, `Usage`, `What graphify is for`, `Step 0 - GitHub repos and multi-path merge (only if a URL or several paths)`, `Step 1 - Ensure graphify is installed` (+266 more)
+- **264 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+259 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **58 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -227,16 +237,16 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `devDependencies` connect `devDependencies` to `dependencies`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **What connects `graphify`, `Usage`, `What graphify is for` to the rest of the system?**
-  _271 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `useI18n()` connect `useI18n` to `workspace.tsx`, `isSupabaseConfigured`?**
+  _High betweenness centrality (0.003) - this node is a cross-community bridge._
+- **What connects `eslintConfig`, `nextConfig`, `name` to the rest of the system?**
+  _264 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `workspace.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.0574400723654455 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.11396011396011396 - nodes in this community are weakly interconnected._
 - **Should `AGENTS.md — The Resort Platform demo` be split into smaller, more focused modules?**
   _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.08333333333333333 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `compilerOptions` be split into smaller, more focused modules?**
   _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._
-- **Should `devDependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.11764705882352941 - nodes in this community are weakly interconnected._

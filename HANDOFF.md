@@ -1,23 +1,28 @@
 # HANDOFF
 
 ## Current task
-Mobile emulator deployment and verification.
+Switch Cafe table amenity to Restaurant across the application.
 
 ## Status (done / in progress / blocked)
-Done. Multi-device interactive mobile emulator is live at `/emulator.html` both locally and on Vercel production.
+Done. Amenity renamed from "Cafe table" to "Restaurant" with the dining emoji (`🍽️`) across UI components, demo mock data, and database seed fixtures.
 
 ## Files touched (path - what changed)
-- `public/emulator.html` - Created interactive emulator supporting iPhone 15 Pro, Pixel 8, iPhone SE (375px), and iPad Mini with live frame controls and environment toggle.
+- `src/components/workspace/workspace.tsx` - Updated `amenityEmojis` map to associate `"Restaurant"` and `"Restaurant table"` with `🍽️`.
+- `src/lib/demo-data.ts` - Updated amenity mock fixture id `amenity-5` name from `"Cafe table"` to `"Restaurant"`.
+- `supabase/seed.sql` - Updated seed amenities insert to use `'Restaurant'` instead of `'Cafe table'`.
 
 ## Key decisions and why
-- Placed emulator directly inside `public/emulator.html` so it is accessible via standard HTTP route without requiring extra tooling or local file permissions.
+- Kept both `"Restaurant"` and `"Restaurant table"` mapped in `amenityEmojis` for backwards compatibility with any persisted database rows.
+- Replaced coffee icon `☕` with dining icon `🍽️` for visual alignment with restaurant facilities.
 
 ## Next steps (ordered)
-- Test live role flows in the emulator.
+- User testing in mobile emulator at `/emulator.html` or live Vercel URL.
 
 ## Where to look (graph nodes, symbols, line ranges)
-- `http://localhost:3000/emulator.html`
-- `https://resortpms-retromadees-projects.vercel.app/emulator.html`
+- `src/components/workspace/workspace.tsx` (line ~188)
+- `src/lib/demo-data.ts` (line ~60)
+- `supabase/seed.sql` (line ~15)
+- `https://resortpms-retromadees-projects.vercel.app/`
 
 ## Gotchas / commands to run (tests, build)
-- `open http://localhost:3000/emulator.html`
+- `npm run typecheck && npm test && npm run test:ui && npm run build`

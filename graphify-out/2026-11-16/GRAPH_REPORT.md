@@ -1,16 +1,16 @@
 # Graph Report - resort-pms-demo  (2026-11-16)
 
 ## Corpus Check
-- 102 files · ~41,111 words
+- 106 files · ~43,122 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 492 nodes · 546 edges · 83 communities (25 shown, 58 thin omitted)
+- 512 nodes · 545 edges · 84 communities (26 shown, 58 thin omitted)
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b46c9810`
+- Built from commit: `7467d8cf`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -52,7 +52,6 @@
 - Section Definitions
 - What You Must Do When Invoked
 - Supabase Postgres Best Practices
-- useI18n
 - graphify reference: extra exports and benchmark
 - advanced-full-text-search.md
 - advanced-jsonb-indexing.md
@@ -102,13 +101,13 @@
 1. `useI18n()` - 19 edges
 2. `compilerOptions` - 16 edges
 3. `What You Must Do When Invoked` - 12 edges
-4. `isSupabaseConfigured()` - 11 edges
-5. `/graphify` - 10 edges
-6. `Workspace()` - 9 edges
-7. `createSupabaseServerClient()` - 9 edges
-8. `Section Definitions` - 9 edges
-9. `Changelog` - 8 edges
-10. `Supabase` - 8 edges
+4. `/graphify` - 10 edges
+5. `isSupabaseConfigured()` - 9 edges
+6. `Section Definitions` - 9 edges
+7. `HANDOFF` - 8 edges
+8. `scripts` - 8 edges
+9. `graphify reference: extra exports and benchmark` - 8 edges
+10. `Workspace()` - 8 edges
 
 ## Surprising Connections (you probably didn't know these)
 - `LoginView()` --calls--> `useI18n()`  [EXTRACTED]
@@ -117,43 +116,43 @@
   src/app/login/page.tsx → src/lib/supabase/server.ts
 - `BookingsView()` --calls--> `useI18n()`  [EXTRACTED]
   src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
-- `DateAvailabilityPicker()` --calls--> `useI18n()`  [EXTRACTED]
-  src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
 - `TicketModal()` --calls--> `useI18n()`  [EXTRACTED]
   src/components/workspace/workspace.tsx → src/components/language-switcher.tsx
+- `signIn()` --calls--> `createSupabaseServerClient()`  [EXTRACTED]
+  src/app/login/actions.ts → src/lib/supabase/server.ts
 
 ## Import Cycles
 - None detected.
 
-## Communities (83 total, 58 thin omitted)
+## Communities (84 total, 58 thin omitted)
 
 ### Community 0 - "workspace.tsx"
-Cohesion: 0.11
-Nodes (19): amenityEmojis, bookingTimes, DateAvailabilityPicker(), dateKey(), getDefaultView(), getInitialView(), getNavLabel(), getRoleTitles() (+11 more)
+Cohesion: 0.09
+Nodes (37): useI18n(), ActivityView(), amenityEmojis, BookingsView(), bookingTimes, DateAvailabilityPicker(), dateKey(), dateLabel() (+29 more)
 
 ### Community 1 - "database.types.ts"
-Cohesion: 0.33
-Nodes (3): config, Database, createSupabaseBrowserClient()
+Cohesion: 0.22
+Nodes (8): Current task, Files touched (path - what changed), Gotchas / commands to run (tests, build), HANDOFF, Key decisions and why, Next steps (ordered), Status (done / in progress / blocked), Where to look (graph nodes, symbols, line ranges)
 
 ### Community 2 - "AGENTS.md — The Resort Platform demo"
 Cohesion: 0.07
 Nodes (26): AGENTS.md — The Resort Platform demo, Always, Product (keep it simple), Schedule (hours from start), Stack, Subagent rules, Thinking rules, This is NOT the Next.js you know (+18 more)
 
 ### Community 3 - "dependencies"
-Cohesion: 0.09
-Nodes (22): lucide-react, next, dependencies, lucide-react, next, react, react-dom, @supabase/ssr (+14 more)
+Cohesion: 0.08
+Nodes (24): lucide-react, next, dependencies, lucide-react, next, react, react-dom, @supabase/ssr (+16 more)
 
 ### Community 4 - "compilerOptions"
 Cohesion: 0.07
 Nodes (28): dom, dom.iterable, esnext, **/*.mts, .next/dev/types/**/*.ts, next-env.d.ts, .next/types/**/*.ts, node_modules (+20 more)
 
 ### Community 5 - "devDependencies"
-Cohesion: 0.12
-Nodes (17): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, tailwindcss, @tailwindcss/turbopack, @types/node (+9 more)
+Cohesion: 0.11
+Nodes (19): eslint, eslint-config-next, devDependencies, eslint, eslint-config-next, @playwright/test, tailwindcss, @tailwindcss/turbopack (+11 more)
 
 ### Community 6 - "isSupabaseConfigured"
-Cohesion: 0.18
-Nodes (16): DEMO_USERS, quickDemoSignIn(), signIn(), signOut(), signUp(), DEMO_ROLES, errorKeyMap, LoginView() (+8 more)
+Cohesion: 0.10
+Nodes (26): metadata, viewport, DEMO_USERS, quickDemoSignIn(), signIn(), signOut(), signUp(), DEMO_ROLES (+18 more)
 
 ### Community 7 - "include"
 Cohesion: 0.10
@@ -164,8 +163,8 @@ Cohesion: 0.11
 Nodes (15): Fix suggestion, Source, What happened, Skill Feedback, Steps, Core Principles, Debugging, Making and Committing Schema Changes (+7 more)
 
 ### Community 9 - "layout.tsx"
-Cohesion: 0.18
-Nodes (12): metadata, viewport, I18nContext, I18nContextValue, LanguageProvider(), LanguageSwitcher(), readLangCookie(), Dictionary (+4 more)
+Cohesion: 0.83
+Nodes (3): assert(), run(), testEndpoint()
 
 ### Community 32 - "Changelog"
 Cohesion: 0.12
@@ -176,8 +175,8 @@ Cohesion: 0.12
 Nodes (15): 1. Concrete Transformation Patterns, 2. Error-First Structure, 3. Quantified Impact, 4. Self-Contained Examples, 5. Semantic Naming, Code Example Standards, Comments, Impact Level Guidelines (+7 more)
 
 ### Community 34 - "demo-data.ts"
-Cohesion: 0.11
-Nodes (18): Amenity, AuditEvent, DemoPayment, Facility, FacilityStatus, Inspection, Notification, Profile (+10 more)
+Cohesion: 0.07
+Nodes (32): config, Amenity, AuditEvent, Database, DemoPayment, Facility, FacilityStatus, Inspection (+24 more)
 
 ### Community 35 - "Section Definitions"
 Cohesion: 0.20
@@ -191,17 +190,13 @@ Nodes (24): For /graphify add and --watch, For /graphify query, For the commit h
 Cohesion: 0.33
 Nodes (5): How to Use, References, Rule Categories by Priority, Supabase Postgres Best Practices, When to Apply
 
-### Community 38 - "useI18n"
-Cohesion: 0.18
-Nodes (17): useI18n(), ActivityView(), BookingsView(), dateLabel(), FacilitiesView(), FacilityTiles(), getFacilityStatusTitles(), getTicketStatusTitles() (+9 more)
-
 ### Community 39 - "graphify reference: extra exports and benchmark"
 Cohesion: 0.22
 Nodes (8): graphify reference: extra exports and benchmark, Step 6b - Wiki (only if --wiki flag), Step 7 - Neo4j export (only if --neo4j or --neo4j-push flag), Step 7a - FalkorDB export (only if --falkordb or --falkordb-push flag), Step 7b - SVG export (only if --svg flag), Step 7c - GraphML export (only if --graphml flag), Step 7d - MCP server (only if --mcp flag), Step 8 - Token reduction benchmark (only if total_words > 5000)
 
 ### Community 72 - "app/page.tsx"
-Cohesion: 0.21
-Nodes (13): demoRoleProfiles, HomePageProps, demoAmenities, demoAuditEvents, demoFacilities, demoNotifications, demoProfile, demoReservations (+5 more)
+Cohesion: 0.50
+Nodes (4): demoRoleProfiles, getLiveSessionData(), HomePage(), HomePageProps
 
 ### Community 73 - "Low-token codebase navigation"
 Cohesion: 0.25
@@ -224,7 +219,7 @@ Cohesion: 0.50
 Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphify reference: incremental update and cluster-only
 
 ## Knowledge Gaps
-- **254 isolated node(s):** `eslintConfig`, `nextConfig`, `name`, `version`, `private` (+249 more)
+- **273 isolated node(s):** `Current task`, `Status (done / in progress / blocked)`, `Files touched (path - what changed)`, `Key decisions and why`, `Next steps (ordered)` (+268 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **58 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
@@ -232,16 +227,16 @@ Nodes (3): For --cluster-only, For --update (incremental re-extraction), graphif
 _Questions this graph is uniquely positioned to answer:_
 
 - **Why does `devDependencies` connect `devDependencies` to `dependencies`?**
+  _High betweenness centrality (0.005) - this node is a cross-community bridge._
+- **Why does `useI18n()` connect `workspace.tsx` to `isSupabaseConfigured`?**
   _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **Why does `useI18n()` connect `useI18n` to `workspace.tsx`, `layout.tsx`, `isSupabaseConfigured`?**
-  _High betweenness centrality (0.004) - this node is a cross-community bridge._
-- **What connects `eslintConfig`, `nextConfig`, `name` to the rest of the system?**
-  _254 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `Current task`, `Status (done / in progress / blocked)`, `Files touched (path - what changed)` to the rest of the system?**
+  _273 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `workspace.tsx` be split into smaller, more focused modules?**
-  _Cohesion score 0.11396011396011396 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08599033816425121 - nodes in this community are weakly interconnected._
 - **Should `AGENTS.md — The Resort Platform demo` be split into smaller, more focused modules?**
   _Cohesion score 0.06666666666666667 - nodes in this community are weakly interconnected._
 - **Should `dependencies` be split into smaller, more focused modules?**
-  _Cohesion score 0.08695652173913043 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.08 - nodes in this community are weakly interconnected._
 - **Should `compilerOptions` be split into smaller, more focused modules?**
   _Cohesion score 0.06896551724137931 - nodes in this community are weakly interconnected._

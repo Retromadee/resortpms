@@ -57,7 +57,7 @@ export const demoAmenities: Amenity[] = [
   { id: "amenity-2", name: "Hamam", capacity_per_slot: 4, price_guest: 0, price_resident: 0, currency: "EUR" },
   { id: "amenity-3", name: "Gym", capacity_per_slot: 12, price_guest: 0, price_resident: 0, currency: "EUR" },
   { id: "amenity-4", name: "Paddle court", capacity_per_slot: 4, price_guest: 0, price_resident: 0, currency: "EUR" },
-  { id: "amenity-5", name: "Cafe table", capacity_per_slot: 20, price_guest: 0, price_resident: 0, currency: "EUR" },
+  { id: "amenity-5", name: "Restaurant", capacity_per_slot: 20, price_guest: 0, price_resident: 0, currency: "EUR" },
 ];
 
 export const demoReservations: Reservation[] = [

@@ -185,7 +185,8 @@ const amenityEmojis: Record<string, string> = {
   Hamam: "♨",
   Gym: "⌁",
   "Paddle court": "◉",
-  "Cafe table": "☕",
+  Restaurant: "🍽️",
+  "Restaurant table": "🍽️",
 };
 
 function getDefaultView(role: UserRole): View {

@@ -12,7 +12,7 @@ insert into public.amenities (name, capacity_per_slot, price_guest, price_reside
   ('Hamam', 4, 0, 0, 'EUR'),
   ('Gym', 12, 0, 0, 'EUR'),
   ('Paddle court', 4, 0, 0, 'EUR'),
-  ('Cafe table', 20, 0, 0, 'EUR')
+  ('Restaurant', 20, 0, 0, 'EUR')
 on conflict (name) do update
   set capacity_per_slot = excluded.capacity_per_slot,
       price_guest = excluded.price_guest,
